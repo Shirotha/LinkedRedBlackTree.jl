@@ -19,6 +19,9 @@ mutable struct LRBNode{T}
     LRBNode{T}() where T = new{T}(nothing, true, nothing, nothing, nothing, nothing, nothing)
     LRBNode(d::T) where T = new{T}(d, true, nothing, nothing, nothing, nothing, nothing)
 end
+"""
+Returns the data held by a `LRBNode`.
+"""
 value(node::LRBNode) = node.data
 value(::Nothing) = nothing
 (node::LRBNode)() = node.data
@@ -47,6 +50,15 @@ mutable struct LRBTree{T, LT <: Function, EQ <: Function}# <: AbstractVector{T}
         return new{T, LT, EQ}(nil, nil, nil, nil, 0, lt, eq)
     end
 end
+"""
+Create a new `LRBTree`.
+
+# Parameters
+- `lt`: comparator function used to traverse the tree while performing binary search, arguments are the result of `by`
+- `eq`: comparator function used to determinte equality for searching and deleting elements, arguments are the elements themselves
+- `by`: this will be called on the elements before being passed to `lt`
+- `rev`: reverses the order of the `LRBTree` (`false` = smallest element first)
+"""
 LRBTree{T}(; lt = isless, eq = (==), by = identity, rev::Bool = false) where T =
     LRBTree{T}(@inline((a, b) -> xor(rev, lt(by(a), by(b)))), eq)
 
@@ -280,6 +292,9 @@ function insert_at!(tree::LRBTree{T}, parent::Union{Nothing, LRBNode{T}}, node::
     return tree
 end
 
+"""
+Deletes given `LRBNode` from a `LRBTree`.
+"""
 function Base.delete!(tree::LRBTree{T}, z::LRBNode{T}) where T
 
     function replace!(tree::LRBTree{T}, old::LRBNode{T}, new::LRBNode{T})
@@ -353,6 +368,15 @@ function Base.delete!(tree::LRBTree{T}, z::LRBNode{T}) where T
     return tree
 end
 
+"""
+Searches for a `LRBNode` in a given `LRBTree`.
+Equality is determined by `LRBTree.eq`.
+
+# mode
+- :binary - uses binary search
+- :linear - avoids using `LRBTree.lt` and searches the `LRBTree` like an unordered list
+
+"""
 function search(tree::LRBTree{T}, data::T; mode = :binary) where T
     if mode == :binary
         node = tree.root
@@ -374,6 +398,9 @@ function search(tree::LRBTree{T}, data::T; mode = :binary) where T
     end
 end
 
+"""
+Inserts a `LRBNode` to the correct position of a `LRBTree`.
+"""
 function Base.insert!(tree::LRBTree{T}, node::LRBNode{T}) where T
     node_x = tree.root
     node_y::Union{Nothing, LRBNode{T}} = nothing
@@ -425,6 +452,9 @@ function Base.getindex(tree::LRBTree, i::Int)
     end
 end
 Base.checkindex(tree::LRBTree, is::AbstractVector{Int}) = all(i -> checkindex(tree, i), is)
+"""
+Accesses multiple indices as a batch, only traversing the linked list once.
+"""
 function Base.getindex(tree::LRBTree{T}, is::AbstractVector{Int}) where T
     isempty(is) && return Vector{T}()
 
@@ -457,7 +487,9 @@ function Base.getindex(tree::LRBTree{T}, is::AbstractVector{Int}) where T
 
     return @inbounds result[invperm(order)]
 end
-
+"""
+Accesses multiple indices relative to a given `LRBNode`, invalid indices will cause `nothing` to be returned.
+"""
 function Base.getindex(tree::LRBTree{T}, pivot::LRBNode{T}, dis::AbstractVector{Int}) where T
     isempty(dis) && return Vector{Union{Nothing, LRBNode{T}}}()
 
@@ -543,7 +575,9 @@ function Base.pop!(tree::LRBTree)
     delete!(tree, node)
     return node.data
 end
-
+"""
+Finds the index of a `LRBNode`.
+"""
 function indexof(node::LRBNode)
     i = 1
     current = node.prev

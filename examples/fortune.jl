@@ -606,6 +606,7 @@ function main(N)
     bounds = AABB{Float64}(-0.1, -0.1, 1.1, 1.1)
     voronoi, _ = fortune(points, bounds)
     bound!(voronoi, bounds)
+    isdir("fortune") || mkdir("fortune")
     draw(voronoi, bounds, "fortune/voronoi.svg")
     
     #weights = rand(N)
